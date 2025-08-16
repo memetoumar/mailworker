@@ -1,0 +1,193 @@
+const jwt= require("jsonwebtoken");
+const User= require("../model/userAuth");
+const mongoose =require("mongoose")
+
+require("dotenv").config()
+
+const getSegmentSubscriber= async(req,res)=>{
+try {
+  console.log(req.body)
+  const userId= req.params.id
+  const filterConditions= req.body.filterCondition;
+
+  // const buildSubscriberFilterQuery = (filters) => {
+  //   return filters.map(filter => {
+  //     const { field, operator, value, value2 } = filter;
+  //     if (operator === 'contains') {
+  //       return { $regexMatch: { input: `$$contact.${field}`, regex: value, options: 'i' } };
+  //     }
+  //     if (operator === 'last') {
+  //       const targetDate = moment().subtract(value, value2).toDate();
+  //       return { [field]: { $gte: targetDate } };
+  //     }  
+   
+  //     if (operator === 'equals') { 
+  //       return { [field]: value };
+  //     }
+  
+  //     // Add more operator handling as needed
+  //     return {};
+  //   });
+  // };
+
+  // const buildAggregationFilter = (conditions) => {
+  //   return conditions.map(condition => {
+  //     const { filters } = condition;
+  //     const mongoFilters = buildSubscriberFilterQuery(filters);
+  
+  //     if (mongoFilters.length > 1) {
+  //       return { $and: mongoFilters };
+  //     } else {
+  //       return mongoFilters[0];
+  //     }
+  //   });
+  // }; 
+
+  // const aggregationPipeline = [
+  //   {
+  //     $match: {
+  //       _id: userId  // Match the specific user by their ID
+  //     }
+  //   },
+  //   {
+  //     $project: {
+  //       name: 1,
+  //       email: 1,
+  //       contacts: {
+  //         $filter: {
+  //           input: "$contacts",
+  //           as: "contact",
+  //            cond: buildAggregationFilter(filterConditions)[0] 
+  //         }
+  //       }
+  //     }
+  //   }
+  // ];
+ 
+  // const userId = '66b6151748ee1c92617b2712';
+
+  const ObjectId = mongoose.Types.ObjectId;
+  const result = await User.aggregate([
+    {
+      $match: { _id: new ObjectId(userId) }
+    },
+    {
+      $project: {
+        userName: 1,
+        emailSent: 1,
+        avatar: 1,
+        firstName: 1,
+        verified: 1,
+        role: 1,
+        lastName: 1,
+        email: 1,
+        password: 1,
+        createdAt: 1,
+        contacts: {
+          $filter: {
+            input: "$contacts",
+            as: "contact",
+            cond: {
+              $or: [
+                {
+                  $and: [
+                    { $regexMatch: { input: "$$contact.email", regex: "@yandex", options: "i" } },
+                    { $lt: ["$$contact.date", new Date("2024-08-01T00:00:00Z").getTime()] }
+                  ]
+                },
+                { $regexMatch: { input: "$$contact.email", regex: "@yahoo.com", options: "i" } }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]).exec();
+  
+  console.log(result);
+  
+  // console.log(JSON.stringify(filterConditions))
+  // console.log(JSON.stringify(buildAggregationFilter(filterConditions)))
+
+res.status(200).json({result})
+
+} catch (error) {
+  console.log(error);
+  res.status(403).send(error)
+}
+
+};
+
+module.exports= {getSegmentSubscriber}
+
+
+
+// const userId = 'user_id'; // Replace with the actual user ID
+// const filterConditions = [
+//   {
+//     type: "OR",
+//     filters: [
+//       { field: "dateJoined", operator: "last", value: 5, value2: "days" },
+//       { field: "email", operator: "contains", value: "@gmail.com" },
+//       { field: "email", operator: "does not contains", value: "@yandex" },
+//     ]
+//   },
+//   {
+//     type: "OR",
+//     filters: [
+//       { field: "dateJoined", operator: "is before", value: 986227227727},
+//       { field: "email", operator: "contains", value: "@gmail.com" },
+//       { field: "email", operator: "does not contains", value: "@yandex" },
+//     ]
+//   },
+// ];
+
+// [
+//   {
+//     _id:8272722278222,
+//     name:"muhammad",
+//     email:"dn@g.com",
+//     subscribers:[
+//       {
+//         name:"user",
+//         email:"daniel@xample.com",
+//         dateJoined:226222672
+//       },
+//       {
+//         name:"user2",
+//         email:"daniel2@xample.com",
+//         dateJoined:6546222672
+//       },
+//       {
+//         name:"user3",
+//         email:"daniel3@xample.com",
+//         dateJoined:226222672
+//       },
+//     ]
+//   }, {
+//     _id:3456664,
+//     name:"umar",
+//     email:"dansn@g.com",
+//     subscribers:[
+//       {
+//         name:"user",
+//         email:"daniel@xample.com",
+//         dateJoined:226222672
+//       },
+//       {
+//         name:"user2",
+//         email:"daniel2@xample.com",
+//         dateJoined:6546222672
+//       },
+//       {
+//         name:"user3",
+//         email:"daniel3@xample.com",
+//         dateJoined:226222672
+//       },
+//     ]
+//   }
+// ]
+
+// Execute the aggregation pipeline
+
+
