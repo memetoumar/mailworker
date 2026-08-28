@@ -12,7 +12,13 @@ const amqp = {
   queue: "mailin",
   amqp: process.env.AMQP_URL, // e.g., from CloudAMQP
 };
-
+console.log("AMQP_URL exists:", !!process.env.AMQP_URL);
+console.log(
+  "AMQP_URL host:",
+  process.env.AMQP_URL
+    ? new URL(process.env.AMQP_URL).hostname
+    : "MISSING"
+);
 
 async function autoReplier() {
   console.log("🕓 Warmup auto-reply worker started...");
