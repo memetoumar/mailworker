@@ -45,7 +45,7 @@ startLoggerWorker()
 
 scheduler()
 warmupEmailConsumer()
-autoReplier();
+// autoReplier();
 } catch (error) {  
     console.log(`connection to mongo failed ${error}`)  
 }  
