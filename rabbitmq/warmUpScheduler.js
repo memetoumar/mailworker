@@ -44,7 +44,6 @@ const SUBJECTS =[
 ]
 
 
-
 function getRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -53,7 +52,7 @@ async function connectAmqp() {
   const conn = await amqp.connect(AMQP_URL);
   const channel = await conn.createChannel();
   await channel.assertQueue(QUEUE_NAME, { durable: true });
-  console.log("✅ RabbitMQ connected & queue asserted");
+  console.log(" RabbitMQ connected & queue asserted");
   return channel;
 }
 
@@ -124,22 +123,20 @@ function sleep(ms) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-async function scheduler() {
+async function warmUpScheduler() {
   if (isRunning) {
-    console.log("⛔ Scheduler already running");
+    console.log(" Scheduler already running");
     return;
   }
   isRunning = true;
 
   const channel = await connectAmqp();
-  console.log("🕓 Scheduler started");
+  console.log("Scheduler started");
 
   async function runCycle() {
     try {
       const now = DateTime.now().setZone("Africa/Lagos");
       const todayKey = now.toISODate(); // returns "YYYY-MM-DD"
-
-
       const users = await User.find({ "warmupInboxes.status": "active" });
 
       for (const u of users) {
@@ -150,7 +147,7 @@ async function scheduler() {
           await sleep(6000 + Math.random() * 12000);
 
           if (inbox.isListener) {
-            console.log(`⏩ Skipping ${inbox.inbox} because it is a listener-only inbox`);
+            console.log(`Skipping ${inbox.inbox} because it is a listener-only inbox`);
             continue;
           }
 
@@ -172,7 +169,7 @@ if (lastDay !== todayKey) {
 
 // ✅ Then check if it's too early to send again
 if (inbox.nextSendDate && now < DateTime.fromJSDate(inbox.nextSendDate).setZone("Africa/Lagos")) {
-  console.log(`⏳ Skipping ${inbox.inbox} due to future nextSendDate: ${inbox.nextSendDate}`);
+  console.log(` Skipping ${inbox.inbox} due to future nextSendDate: ${inbox.nextSendDate}`);
   continue;
 }
 
@@ -185,7 +182,7 @@ if (inbox.nextSendDate && now < DateTime.fromJSDate(inbox.nextSendDate).setZone(
             continue;
           }
 
-          console.log(`⏩ Scheduling ${toSend} for ${inbox.inbox}`);
+          console.log(`Scheduling ${toSend} for ${inbox.inbox}`);
 
           const tomorrow = now.plus({ days: 1 }).startOf('day');
           inbox.nextSendDate = tomorrow.toJSDate();
@@ -195,17 +192,9 @@ if (inbox.nextSendDate && now < DateTime.fromJSDate(inbox.nextSendDate).setZone(
 
   const ws = parseSendWindow(now.toJSDate(), inbox.sendWindow?.start, new Date());
 const we = parseSendWindow(now.toJSDate(), inbox.sendWindow?.end, new Date());
+   const times = calculateScheduledTimes(ws, we, toSend);
 
-// console.log("✅ Scheduling window:", {
-//   ws: ws.toISO?.() || ws,
-//   we: we.toISO?.() || we
-// });
-          const times = calculateScheduledTimes(ws, we, toSend);
-
-          // const same = u.warmupInboxes
-          //   .filter(i => i.status === "active" && i.inbox !== inbox.inbox)
-          //   .map(i => ({ to: i.inbox, firstName: i.firstName }));
-
+        
           const pool = users.flatMap(usr =>
             usr.warmupInboxes
               .filter(i => i.status === "active" && i.inbox !== inbox.inbox)
@@ -248,7 +237,7 @@ const we = parseSendWindow(now.toJSDate(), inbox.sendWindow?.end, new Date());
         if (dirty) await u.save();
       }
     } catch (err) {
-      console.error("❌ Scheduler error:", err);
+      console.error(" Scheduler error:", err);
     } finally {
       setTimeout(runCycle, 40 * 60 * 1000);
       isRunning = false;
@@ -258,4 +247,4 @@ const we = parseSendWindow(now.toJSDate(), inbox.sendWindow?.end, new Date());
   runCycle();
 }
 
-module.exports = { scheduler };
+module.exports = { warmUpScheduler };

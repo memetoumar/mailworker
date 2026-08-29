@@ -4,7 +4,7 @@ const { convert } = require('html-to-text');
 
 // 🔐 Your pool of warmed inboxes
 const mailboxes = [
-  { user: "dangabarin2020@gmail.com", pass: "yabccxpsciuoynqs" },
+  { user: "dangabarin2020@gmail.com", pass: "bzsxkowyjanzxyjo" },
   { user: "memetsamples@gmail.com", pass: "bhihurizjmhmyfsl" },
   { user: "memetoumar@gmail.com", pass: "dfbbiugrxpcivjkh" },
 ];

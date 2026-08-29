@@ -1,10 +1,11 @@
 // consumerWorker.js
 require('dotenv').config(); // If you need to load .env
+const {warmUpScheduler} = require('./rabbitmq/warmUpScheduler.js');
+const {warmupEmailConsumer } = require('./rabbitmq/warmupEmailSenderWorker');
+
 const { startAutoReplier } = require('./rabbitmq/autoReplier.js');
 const { campaignConsumer } = require("./rabbitmq/consumer");
 const { startLoggerWorker } = require('./rabbitmq/logWorker.js');
-const {scheduler} = require('./rabbitmq/warmUpWorker');
-const {warmupEmailConsumer } = require('./rabbitmq/warmupEmailSenderWorker');
 const {connectDb}=require("./db/connectDb.js");
 require("dotenv").config();
 
@@ -12,13 +13,7 @@ const amqp = {
   queue: "mailin",
   amqp: process.env.AMQP_URL, // e.g., from CloudAMQP
 };
-console.log("AMQP_URL exists:", !!process.env.AMQP_URL);
-console.log(
-  "AMQP_URL host:",
-  process.env.AMQP_URL
-    ? new URL(process.env.AMQP_URL).hostname
-    : "MISSING"
-);
+
 
 async function autoReplier() {
   console.log("🕓 Warmup auto-reply worker started...");
@@ -47,11 +42,11 @@ try {
    
 // Just call the consumer ONCE
 campaignConsumer(amqp, null, null);
-startLoggerWorker()
+// startLoggerWorker()
 
-scheduler()
+warmUpScheduler()
 warmupEmailConsumer()
-// autoReplier();
+autoReplier();
 } catch (error) {  
     console.log(`connection to mongo failed ${error}`)  
 }  
