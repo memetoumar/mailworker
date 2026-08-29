@@ -95,7 +95,7 @@ const campaignConsumer = (amqp, res, list) => {
         { selector: 'style', format: 'skip' }
       ]
     })
-  : message.text || '';
+  : message.plainText || '';
       
         const fromName = message.from && message.from.trim() ? message.from.trim() : 'memet oumar';
 
