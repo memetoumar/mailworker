@@ -43,9 +43,9 @@ try {
 campaignConsumer(amqp, null, null);
 // startLoggerWorker()
 
-warmUpScheduler()
-warmupEmailConsumer()
-autoReplier();
+// warmUpScheduler()
+// warmupEmailConsumer()
+// autoReplier();
 } catch (error) {  
     console.log(`connection to mongo failed ${error}`)  
 }  

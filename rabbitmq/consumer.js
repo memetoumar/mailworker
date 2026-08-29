@@ -88,7 +88,6 @@ const campaignConsumer = (amqp, res, list) => {
         }
 
         const { transport, sender } = getNextTransport();
-
       const text = message.sendHTML === true? convert(message.html || '', {wordwrap: false,
         selectors: [
         { selector: 'img', format: 'skip' },
@@ -111,7 +110,7 @@ const campaignConsumer = (amqp, res, list) => {
           }
         };
 
-        if (message.html && message.html.trim() && message.sendHTML === 'true') {
+        if (message.html && message.html.trim() && message.sendHTML === true) {
           mail_config.html = message.html
         }
 
