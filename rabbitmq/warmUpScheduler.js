@@ -131,7 +131,6 @@ async function warmUpScheduler() {
   isRunning = true;
 
   const channel = await connectAmqp();
-  console.log("Scheduler started");
 
   async function runCycle() {
     try {

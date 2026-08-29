@@ -89,14 +89,14 @@ const campaignConsumer = (amqp, res, list) => {
 
         const { transport, sender } = getNextTransport();
 
-        const text = convert(message.html || message.text || '', {
+        const text = convert(message.html || message.message || '', {
           wordwrap: false,
           selectors: [
             { selector: 'img', format: 'skip' },
             { selector: 'style', format: 'skip' }
           ]
         });
-
+      
         const fromName = message.from && message.from.trim() ? message.from.trim() : 'memet oumar';
 
         const mail_config = {

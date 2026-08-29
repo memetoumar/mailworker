@@ -10,10 +10,9 @@ const {connectDb}=require("./db/connectDb.js");
 require("dotenv").config();
 
 const amqp = {
-  queue: "mailin",
+  queue: "campaign-queue",
   amqp: process.env.AMQP_URL, // e.g., from CloudAMQP
 };
-
 
 async function autoReplier() {
   console.log("🕓 Warmup auto-reply worker started...");

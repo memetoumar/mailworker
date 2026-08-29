@@ -54,7 +54,7 @@ async function warmupEmailConsumer() {
   const channel = await conn.createChannel();
   await channel.assertQueue(QUEUE_NAME, { durable: true });
   channel.prefetch(CONCURRENCY);
-  console.log("🚀 Email worker started with concurrency:", CONCURRENCY);
+  // console.log("Email worker started with concurrency:", CONCURRENCY);
 
   channel.consume(
     QUEUE_NAME,
