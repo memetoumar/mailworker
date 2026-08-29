@@ -47,7 +47,7 @@ const campaignConsumer = (amqp, res, list) => {
       console.error("❌ AMQP Connection Error:", err.stack);
       return process.exit(1);
     }
-
+  //  console.log("amqp connected successfully")
     connection.createChannel((err, channel) => {
       if (err) {
         console.error("❌ Channel Error:", err.stack);
@@ -128,7 +128,7 @@ const campaignConsumer = (amqp, res, list) => {
           }
         
           // console.log(`✅ Senthhhhhhhhhhhv vvvvvv to: ${message.to}`);
-          console.log(` Sent to: ${message.userId}`);
+          console.log(` Sent to: ${message.to}`);
           
 
           sentTo.push(message.to);

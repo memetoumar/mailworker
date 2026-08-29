@@ -41,7 +41,7 @@ try {
    
 // Just call the consumer ONCE
 campaignConsumer(amqp, null, null);
-// startLoggerWorker()
+startLoggerWorker()
 
 // warmUpScheduler()
 // warmupEmailConsumer()
