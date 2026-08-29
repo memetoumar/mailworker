@@ -1,6 +1,6 @@
 const amqplib = require('amqplib/callback_api');
 const nodemailer = require('nodemailer');
-const { convert } = require('html-to-text');
+// const { convert } = require('html-to-text');
 
 // 🔐 Your pool of warmed inboxes
 const mailboxes = [
@@ -10,7 +10,18 @@ const mailboxes = [
 ];
 
 let currentMailboxIndex = 0;
+function spinText(text) {
+  if (!text) return '';
 
+  return text.replace(/\{([^{}]+)\}/g, (match, choices) => {
+    const options = choices
+      .split('|')
+      .map(option => option.trim())
+      .filter(Boolean);
+
+    return options[Math.floor(Math.random() * options.length)];
+  });
+}
 const getNextTransport = () => {
   const { user, pass } = mailboxes[currentMailboxIndex];
   currentMailboxIndex = (currentMailboxIndex + 1) % mailboxes.length;
@@ -88,22 +99,15 @@ const campaignConsumer = (amqp, res, list) => {
         }
 
         const { transport, sender } = getNextTransport();
-      const text = message.sendHTML === true? convert(message.html || '', {wordwrap: false,
-        selectors: [
-        { selector: 'img', format: 'skip' },
-        { selector: 'style', format: 'skip' }
-      ]
-    })
-  : message.plainText || '';
-      
+        const text = message.text || '';
         const fromName = message.from && message.from.trim() ? message.from.trim() : 'memet oumar';
 
         const mail_config = {
           from: `${fromName} <${sender}>`,
           to: message.to,
-          subject: message.subject || "No subject",
+          subject: spinText(message.subject || "No subject"),
+          text: spinText(text),
           replyTo: sender,
-          text,
           headers: {
             'X-Priority': '3',
             'X-Mailer': 'Nodemailer',
