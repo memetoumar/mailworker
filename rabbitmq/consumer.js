@@ -99,7 +99,7 @@ const campaignConsumer = (amqp, res, list) => {
         }
 
         const { transport, sender } = getNextTransport();
-        const text = message.text || '';
+        const text = message.plainText || '';
         const fromName = message.from && message.from.trim() ? message.from.trim() : 'memet oumar';
 
         const mail_config = {
