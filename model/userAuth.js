@@ -31,10 +31,28 @@ const warmupInboxSchema = new mongoose.Schema({
        },
       firstName:{type:String, default:'Mailing_Agent'},
   appPassword: { type: String, required: true },
+  canSendCampaign: { type: Boolean,default:true},
+  warmUpInbox: { type: Boolean,default:true},
   isListener: { type: Boolean,default:true},
   provider: { type: String, default: "gmail" },
+  warmupDailyLimit: {type: Number,default: 4},
+
+warmupDailyIncrease: {
+    type: Number,
+    default: 2
+},
+lastWarmupSentDate: {
+    type: Date,
+    default: null
+},
+
+warmupSentToday: {
+    type: Number,
+    default: 0
+},
   dailyLimit: { type: Number, default: 4},       // Starting daily send limit
   dailyIncrease: { type: Number, default: 4 },   // How much to increase per day (configurable)
+  warmupTotalEmailSent: { type: Number, default: 0 },
   totalEmailSent: { type: Number, default: 0 },
   lastSentDate: { type: Date, default: null },
   nextSendDate: { type: Date, default: Date.now },

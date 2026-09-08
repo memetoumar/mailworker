@@ -1,79 +1,15 @@
 const amqplib = require('amqplib/callback_api');
 const nodemailer = require('nodemailer');
-const User = require("../model/userAuth");
 // const { convert } = require('html-to-text');
 
 // 🔐 Your pool of warmed inboxes
-const mailboxesww = [
+const mailboxes = [
   { user: "dangabarin2020@gmail.com", pass: "bzsxkowyjanzxyjo" },
   { user: "memetsamples@gmail.com", pass: "bhihurizjmhmyfsl" },
   { user: "memetoumar@gmail.com", pass: "dfbbiugrxpcivjkh" },
 ];
 
-let mailboxes = [];
 let currentMailboxIndex = 0;
-
-async function loadMailboxes() {
-  const users = await User.find(
-    {
-      "warmupInboxes.status": "active",
-    },
-    {
-      warmupInboxes: 1
-    }
-  ).lean();
-
-  const activeMailboxes = [];
-
-  for (const user of users) {
-    for (const inboxCfg of user.warmupInboxes) {
-      if (
-        inboxCfg.status !== "active" ||
-        inboxCfg.canSendCampaign !== true
-      ) {
-        continue;
-      }
-
-      activeMailboxes.push({
-        userId: user._id,
-        inboxId: inboxCfg._id,
-        user: inboxCfg.inbox,
-        pass: inboxCfg.appPassword,
-        firstName: inboxCfg.firstName,
-        dailyLimit: inboxCfg.dailyLimit,
-        sentToday: inboxCfg.sentToday,
-        reservedToday: inboxCfg.reservedToday || 0,
-        status: inboxCfg.status,
-        canSendCampaign: inboxCfg.canSendCampaign
-      });
-    }
-  }
-
-  mailboxes = activeMailboxes;
-
-  console.log(`📬 Loaded ${mailboxes.length} campaign-enabled inboxes`);
-}
-let transports = [];
-
-function initializeTransports() {
-  transports = mailboxes.map((mailbox) => ({
-    sender: mailbox.user,
-    firstName: mailbox.firstName,
-    userId: mailbox.userId,
-
-    transport: nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: mailbox.user,
-        pass: mailbox.pass
-      }
-    })
-  }));
-
-  console.log(`📨 Initialized ${transports.length} SMTP transporters`);
-}
 function spinText(text) {
   if (!text) return '';
 
@@ -86,20 +22,21 @@ function spinText(text) {
     return options[Math.floor(Math.random() * options.length)];
   });
 }
-function getNextTransport() {
-  if (transports.length === 0) {
-    throw new Error("No active mailboxes available");
-  }
+const getNextTransport = () => {
+  const { user, pass } = mailboxes[currentMailboxIndex];
+  currentMailboxIndex = (currentMailboxIndex + 1) % mailboxes.length;
 
-  const account = transports[currentMailboxIndex];
-
-  currentMailboxIndex =
-    (currentMailboxIndex + 1) % transports.length;
-
-  console.log(`🔄 Using mailbox: ${account.sender}`);
-
-  return account;
-}
+  console.log(`🔄 Using mailbox: ${user}`);
+  return {
+    transport: nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+    }),
+    sender: user,
+  };
+};
   function sleep(ms) {
   return new Promise((res) => setTimeout(res, ms));
 }
@@ -182,8 +119,8 @@ const campaignConsumer = (amqp, res, list) => {
         }
 
         console.log(`📤 Sending email to ${message.to}...`);
-  // sleep(30000 + Math.random() * 30000).
- sleep(3000 + Math.random() * 1000).then(()=>{
+  
+ sleep(30000 + Math.random() * 30000).then(()=>{
   transport.sendMail(mail_config, (err, info) => {
           if (err) {
             console.error(`❌ Send Error to ${message.to}:`, err.message);
@@ -223,21 +160,4 @@ const campaignConsumer = (amqp, res, list) => {
   });
 };
 
-async function startCampaignWorker(amqp) {
-  try {
-    await loadMailboxes();
-
-    initializeTransports();
-
-    campaignConsumer(amqp);
-
-  } catch (error) {
-    console.error(
-      "❌ Failed to start campaign worker:",
-      error
-    );
-  }
-}
-module.exports = {
-  startCampaignWorker
-};
+module.exports = { campaignConsumer };

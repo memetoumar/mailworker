@@ -4,7 +4,7 @@ const {warmUpScheduler} = require('./rabbitmq/warmUpScheduler.js');
 const {warmupEmailConsumer } = require('./rabbitmq/warmupEmailSenderWorker');
 
 const { startAutoReplier } = require('./rabbitmq/autoReplier.js');
-const { campaignConsumer } = require("./rabbitmq/consumer");
+const { campaignConsumer, startCampaignWorker } = require("./rabbitmq/consumer");
 const { startLoggerWorker } = require('./rabbitmq/logWorker.js');
 const {connectDb}=require("./db/connectDb.js");
 require("dotenv").config();
@@ -40,12 +40,12 @@ try {
     })
    
 // Just call the consumer ONCE
-campaignConsumer(amqp, null, null);
+startCampaignWorker(amqp, null, null);
 startLoggerWorker()
 
-warmUpScheduler()
-warmupEmailConsumer()
-autoReplier();
+// warmUpScheduler()
+// warmupEmailConsumer()
+// autoReplier();
 } catch (error) {  
     console.log(`connection to mongo failed ${error}`)  
 }  

@@ -142,22 +142,20 @@ async function warmUpScheduler() {
         let dirty = false;
 
         for (const inbox of u.warmupInboxes) {
-          if (inbox.status !== "active") continue;
+          if (inbox.status !== "active" || inbox.warmUpInbox !== true) {
+            console.log(`Skipping ${inbox.inbox} because its inactive or not a warmup inbox`);
+            continue;
+          };
           await sleep(6000 + Math.random() * 12000);
 
-          if (inbox.isListener) {
-            console.log(`Skipping ${inbox.inbox} because it is a listener-only inbox`);
-            continue;
-          }
-
         // 1. Handle fresh day reset first
-const lastDay = inbox.lastSentDate?.toISOString().slice(0, 10) ?? null;
+const lastDay = inbox.lastWarmupSentDate?.toISOString().slice(0, 10) ?? null;
 if (lastDay !== todayKey) {
   console.log('fresh day started, scheduling all cold warm up emails started');
-  inbox.sentToday = 0;
-  inbox.dailyLimit += inbox.dailyIncrease;
-  inbox.dailyLimit = Math.min(inbox.dailyLimit, MAX_SAFE);
-  inbox.lastSentDate = now;
+  inbox.warmupSentToday = 0;
+  inbox.warmupDailyLimit += inbox.warmupDailyIncrease;
+  inbox.warmupDailyLimit = Math.min(inbox.warmupDailyLimit, MAX_SAFE);
+  inbox.lastWarmupSentDate = now;
   if (inbox.replyRate < 0.70) {
     inbox.replyRate += 0.02;
     inbox.replyRate = Math.min(inbox.replyRate, 0.70);
@@ -173,7 +171,7 @@ if (inbox.nextSendDate && now < DateTime.fromJSDate(inbox.nextSendDate).setZone(
 }
 
 
-          const toSend = inbox.dailyLimit - inbox.sentToday;
+          const toSend = inbox.warmupDailyLimit - inbox.warmupSentToday;
           if (toSend <= 0) {
            const tomorrow = now.plus({ days: 1 }).startOf('day');
            inbox.nextSendDate = tomorrow.toJSDate(); // Already start of day
@@ -185,8 +183,8 @@ if (inbox.nextSendDate && now < DateTime.fromJSDate(inbox.nextSendDate).setZone(
 
           const tomorrow = now.plus({ days: 1 }).startOf('day');
           inbox.nextSendDate = tomorrow.toJSDate();
-          inbox.sentToday += toSend;
-          inbox.totalEmailSent += toSend;
+          inbox.warmupSentToday += toSend;
+          inbox.warmupTotalEmailSent += toSend;
           dirty = true;
 
   const ws = parseSendWindow(now.toJSDate(), inbox.sendWindow?.start, new Date());
