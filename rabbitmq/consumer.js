@@ -60,7 +60,8 @@ function initializeTransports() {
     sender: mailbox.user,
     firstName: mailbox.firstName,
     userId: mailbox.userId,
-
+    // NEW
+    inboxId: mailbox.inboxId,
     transport: nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
@@ -161,7 +162,7 @@ const campaignConsumer = (amqp, res, list) => {
           return channel.ack(data);
         }
 
-        const { transport, sender } = getNextTransport();
+        const { transport, sender, inboxId } = getNextTransport();
         const text = message.plainText || '';
         const fromName = message.from && message.from.trim() ? message.from.trim() : 'memet oumar';
 
@@ -189,26 +190,39 @@ const campaignConsumer = (amqp, res, list) => {
             console.error(`❌ Send Error to ${message.to}:`, err.message);
             return channel.ack(data);
           }
-        
-          // console.log(`✅ Senthhhhhhhhhhhv vvvvvv to: ${message.to}`);
-          console.log(` Sent to: ${message.to}`);
-          
 
+          console.log(` Sent to: ${message.to}`);
           sentTo.push(message.to);
 
           // ✅ PUBLISH to sentLogs queue
-          if (message.userId) {
-            const log = {
-              userId: message.userId,
-              email: message.to
-            };
-            console.log("📤 Publishing to sentLogs", log);
+        if (message.userId) {
+  const log = {
+    userId: message.userId,
+    trackerId: message.trackerId,
+    contactEmail: message.contactEmail || message.to,
 
-            channel.sendToQueue("sentLogs", Buffer.from(JSON.stringify(log)), {
-              persistent: true
-            });
-            
-          }
+    // Which mailbox actually sent this email
+    mailboxId: inboxId,
+    sender,
+
+    // VERY IMPORTANT
+    messageId: info.messageId,
+
+    subject: mail_config.subject,
+    sentAt: new Date()
+  };
+
+  console.log("📤 Publishing to sentLogs", log);
+
+  channel.sendToQueue(
+    "sentLogs",
+    Buffer.from(JSON.stringify(log)),
+    {
+      persistent: true,
+      contentType: "application/json"
+    }
+  );
+}
 
           channel.ack(data);
           scheduleSummary(sender, transport);
